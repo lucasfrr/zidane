@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-const realMadrid = "https://alisports.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid"
+const urlSearch = "https://alisports.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid"
+const mainUrl = "https://alisports.x.yupoo.com"
 
 func main() {
-	res, err := http.Get(realMadrid)
+	fmt.Println("PESQUISA INICIAL...")
+	res, err := http.Get(urlSearch)
 
 	if err != nil {
 		panic(err)
@@ -29,7 +32,14 @@ func main() {
 		pages++
 	})
 
-	fmt.Println("Pages:", pages)
+	var pageLinks []string
+	for i := 2; i <= pages; i++ {
+		newLink := urlSearch + "&page=" + strconv.Itoa(i)
+		pageLinks = append(pageLinks, newLink)
+	}
+
+	fmt.Println("NÚMERO DE PÁGINAS:", pages)
+	fmt.Println("PRÓXIMOS LINKS DA PAGINAÇÃO:", pageLinks)
 
 	links := doc.Find(".showindex__children").Find("a").Map(func(i int, s *goquery.Selection) string {
 		link, _ := s.Attr("href")
@@ -37,6 +47,41 @@ func main() {
 		return link
 	})
 
-	fmt.Println(links)
+	titles := doc.Find(".showindex__children").Find("a").Map(func(i int, s *goquery.Selection) string {
+		title, _ := s.Attr("title")
+
+		return title
+	})
+
+	fmt.Println(titles)
+	fmt.Println("LINKS DE TODOS OS MODELOS ENCONTRADOS:", links)
+
+	for i, link := range links {
+		fmt.Printf("ACESSANDO MODELO NÚMERO %v: %v\n", i+1, link)
+
+		fmt.Println()
+		jerseyRes, err := http.Get(mainUrl + link)
+
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		defer jerseyRes.Body.Close()
+
+		jerseyDoc, err := goquery.NewDocumentFromReader(jerseyRes.Body)
+
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		jerseyDoc.Find(".showalbum__children").Each(func(i int, s *goquery.Selection) {
+			id, _ := s.Attr("data-id")
+			fmt.Println("EXIBINDO OS LINKS DAS IMAGENS DO MODELO DA CAMISA")
+			fmt.Println(mainUrl + id + "?uid=1")
+		})
+
+	}
 
 }
