@@ -27,18 +27,9 @@ func main() {
 		panic(err)
 	}
 
-	pages := 0
-	doc.Find(".pagination__number").Each(func(i int, s *goquery.Selection) {
-		pages++
-	})
+	pageLinks := getPages(doc)
 
-	var pageLinks []string
-	for i := 2; i <= pages; i++ {
-		newLink := urlSearch + "&page=" + strconv.Itoa(i)
-		pageLinks = append(pageLinks, newLink)
-	}
-
-	fmt.Println("NÚMERO DE PÁGINAS:", pages)
+	fmt.Println("NÚMERO DE PÁGINAS:", len(pageLinks))
 	fmt.Println("PRÓXIMOS LINKS DA PAGINAÇÃO:", pageLinks)
 
 	links := doc.Find(".showindex__children").Find("a").Map(func(i int, s *goquery.Selection) string {
@@ -84,4 +75,20 @@ func main() {
 
 	}
 
+}
+
+func getPages(document *goquery.Document) []string {
+	pages := 0
+	var pageLinks []string
+
+	document.Find(".pagination__number").Each(func(i int, s *goquery.Selection) {
+		pages++
+	})
+
+	for i := 1; i <= pages; i++ {
+		newLink := urlSearch + "&page=" + strconv.Itoa(i)
+		pageLinks = append(pageLinks, newLink)
+	}
+
+	return pageLinks
 }
