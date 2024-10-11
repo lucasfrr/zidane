@@ -1,18 +1,31 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-const urlSearch = "https://alisports.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid"
-const mainUrl = "https://alisports.x.yupoo.com"
+const mainUrl = "https://alisports.x.yupoo.com/search/album?uid=1&sort=&q="
 
 func main() {
 	fmt.Println("PESQUISA INICIAL...")
+	fmt.Print("Digite o nome do clube/seleção: ")
+
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	term := scanner.Text()
+
+	formattedTerm := formatSearchTerm(term)
+
+	fmt.Println(formattedTerm)
+
+	urlSearch := mainUrl + formattedTerm
 	res, err := http.Get(urlSearch)
 
 	if err != nil {
@@ -27,7 +40,7 @@ func main() {
 
 	res.Body.Close()
 
-	pageLinks := getPages(doc)
+	pageLinks := getPages(doc, urlSearch)
 
 	fmt.Println("NÚMERO DE PÁGINAS:", len(pageLinks))
 	fmt.Println("PRÓXIMOS LINKS DA PAGINAÇÃO:", pageLinks)
@@ -86,7 +99,7 @@ func main() {
 
 }
 
-func getPages(document *goquery.Document) []string {
+func getPages(document *goquery.Document, url string) []string {
 	pages := 0
 	var pageLinks []string
 
@@ -95,9 +108,25 @@ func getPages(document *goquery.Document) []string {
 	})
 
 	for i := 1; i <= pages; i++ {
-		newLink := urlSearch + "&page=" + strconv.Itoa(i)
+		newLink := url + "&page=" + strconv.Itoa(i)
 		pageLinks = append(pageLinks, newLink)
 	}
 
 	return pageLinks
+}
+
+func formatSearchTerm(term string) string {
+	var newTerm string
+
+	s := strings.ToLower(term)
+
+	for i := 0; i < len(s); i++ {
+		if string(s[i]) == " " {
+			newTerm += "+"
+		} else {
+			newTerm += string(s[i])
+		}
+	}
+
+	return newTerm
 }
