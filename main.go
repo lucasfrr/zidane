@@ -23,9 +23,9 @@ func main() {
 
 	formattedTerm := formatSearchTerm(term)
 
-	fmt.Println(formattedTerm)
-
 	urlSearch := mainUrl + formattedTerm
+
+	fmt.Println(urlSearch)
 	res, err := http.Get(urlSearch)
 
 	if err != nil {
@@ -107,9 +107,13 @@ func getPages(document *goquery.Document, url string) []string {
 		pages++
 	})
 
-	for i := 1; i <= pages; i++ {
-		newLink := url + "&page=" + strconv.Itoa(i)
-		pageLinks = append(pageLinks, newLink)
+	if pages > 0 {
+		for i := 1; i <= pages; i++ {
+			newLink := url + "&page=" + strconv.Itoa(i)
+			pageLinks = append(pageLinks, newLink)
+		}
+	} else {
+		pageLinks = append(pageLinks, url)
 	}
 
 	return pageLinks
