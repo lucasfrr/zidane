@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"lucasfrr/zidane/handlers"
+	"net/http"
+	"os"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -24,10 +27,6 @@ func main() {
 	pageLinks := handlers.GetPages(document, urlSearch)
 	fmt.Println("NÚMERO DE PÁGINAS:", len(pageLinks))
 	fmt.Println("PRÓXIMOS LINKS DA PAGINAÇÃO:", pageLinks)
-
-	// data := make([]map[string]string, )
-	var albums []map[string]string
-	var images []map[string]string
 
 	for i, link := range pageLinks {
 		fmt.Printf("PAGINA %v - %v\n", i+1, link)
@@ -56,26 +55,60 @@ func main() {
 				id, _ := s.Attr("data-id")
 				title, _ := s.Find(".text_overflow").Attr("title")
 
-				image := map[string]string{
-					"uri":   "https://alisports.x.yupoo.com/" + id + "?uid=1",
-					"title": title,
-				}
+				imageLink := "https://alisports.x.yupoo.com/" + id + "?uid=1"
 
-				images = append(images, image)
+				fmt.Printf("URI da imagem: %v | %v\n", imageLink, title)
 
-				fmt.Printf("URI da imagem: https://alisports.x.yupoo.com/%v?uid=1 | %v\n", id, title)
+				imageDocument := handlers.MakeRequest(imageLink)
+
+				src, _ := imageDocument.Find(".viewer__img").Attr("src")
+				fmt.Printf("Fonte da imagem: https:%v\n", src)
+
+				jerseyLink := "https:" + src
+
+				downloadJersey(jerseyLink, title)
 			})
 
-			album := map[string]string{
-				"title":  albumTitles[j],
-				"uri":    urlAlbum,
-				"images": images,
-			}
-
-			albums = append(albums, album)
-			// data = append(data, albums)
 		}
 
 	}
 
+}
+
+func downloadJersey(link string, title string) {
+	client := &http.Client{}
+	cookie := &http.Cookie{
+		Name:  "language",
+		Value: "pt",
+	}
+	request, _ := http.NewRequest("GET", link, nil)
+
+	request.Header.Set("User-Agent", "Mozilla/5.0")
+
+	resp, _ := client.Do(req)
+	response, err := http.Get(link)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+
+	path := "/home/lucas/jerseys/" + title
+
+	file, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Baixado com sucesso\n")
+}
+
+func setCookie(w http.ResponseWriter, r *http.Request) {
+	cookie := http.Cookie{}
 }
