@@ -2,10 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"lucasfrr/zidane/handlers"
-	"net/http"
-	"os"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -66,49 +63,11 @@ func main() {
 
 				jerseyLink := "https:" + src
 
-				downloadJersey(jerseyLink, title)
+				handlers.DownloadJersey(jerseyLink, title, imageLink)
 			})
 
 		}
 
 	}
 
-}
-
-func downloadJersey(link string, title string) {
-	client := &http.Client{}
-	cookie := &http.Cookie{
-		Name:  "language",
-		Value: "pt",
-	}
-	request, _ := http.NewRequest("GET", link, nil)
-
-	request.Header.Set("User-Agent", "Mozilla/5.0")
-
-	resp, _ := client.Do(req)
-	response, err := http.Get(link)
-	if err != nil {
-		panic(err)
-	}
-
-	defer response.Body.Close()
-
-	path := "/home/lucas/jerseys/" + title
-
-	file, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	_, err = io.Copy(file, response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("Baixado com sucesso\n")
-}
-
-func setCookie(w http.ResponseWriter, r *http.Request) {
-	cookie := http.Cookie{}
 }

@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"bufio"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -69,4 +71,38 @@ func InputSearch() string {
 	formattedTerm := FormatSearchTerm(term)
 
 	return formattedTerm
+}
+
+func DownloadJersey(link string, title string, refererLink string) {
+	client := &http.Client{}
+
+	request, err := http.NewRequest("GET", link, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("User-Agent", "Mozilla/5.0")
+	request.Header.Set("Referer", refererLink)
+
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+
+	path := "/home/lucas/jerseys/" + title
+
+	file, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Baixado com sucesso\n")
 }
