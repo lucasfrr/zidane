@@ -3,11 +3,18 @@ package main
 import (
 	"fmt"
 	"lucasfrr/zidane/handlers"
+	"lucasfrr/zidane/models"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 const mainUrl = "https://alisports.x.yupoo.com/search/album?uid=1&sort=&q="
+
+// https://royal-sports.x.yupoo.com/
+// https://beonestore.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid
+// http://aliexpressjoe.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid
+// https://kingsemsport2.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid
+// https://minkang.x.yupoo.com/search/album?uid=1&sort=&q=real+madrid
 
 func main() {
 	fmt.Println("PESQUISA INICIAL...")
@@ -24,6 +31,9 @@ func main() {
 	pageLinks := handlers.GetPages(document, urlSearch)
 	fmt.Println("NÚMERO DE PÁGINAS:", len(pageLinks))
 	fmt.Println("PRÓXIMOS LINKS DA PAGINAÇÃO:", pageLinks)
+
+	var albums []models.Album
+	var jerseys []models.Jersey
 
 	for i, link := range pageLinks {
 		fmt.Printf("PAGINA %v - %v\n", i+1, link)
@@ -52,21 +62,36 @@ func main() {
 				id, _ := s.Attr("data-id")
 				title, _ := s.Find(".text_overflow").Attr("title")
 
-				imageLink := "https://alisports.x.yupoo.com/" + id + "?uid=1"
+				refererLink := "https://alisports.x.yupoo.com/" + id + "?uid=1"
 
-				fmt.Printf("URI da imagem: %v | %v\n", imageLink, title)
+				fmt.Printf("URI da imagem: %v | %v\n", refererLink, title)
 
-				imageDocument := handlers.MakeRequest(imageLink)
+				imageDocument := handlers.MakeRequest(refererLink)
 
 				src, _ := imageDocument.Find(".viewer__img").Attr("src")
 				fmt.Printf("Fonte da imagem: https:%v\n", src)
 
 				jerseyLink := "https:" + src
 
-				handlers.DownloadJersey(jerseyLink, title, imageLink)
+				handlers.DownloadJersey(jerseyLink, title, refererLink)
+
+				jersey := &models.Jersey{
+					Name: title,
+					Url:  refererLink,
+				}
+
+				jerseys = append(jerseys, jersey)
+
 			})
 
 		}
+
+		album := &models.Album{
+			Title:   albumTitles[i],
+			Jerseys: jerseys,
+		}
+
+		albums = append(albums, album)
 
 	}
 
