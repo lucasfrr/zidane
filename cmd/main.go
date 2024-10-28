@@ -73,14 +73,14 @@ func main() {
 
 				jerseyLink := "https:" + src
 
-				handlers.DownloadJersey(jerseyLink, title, refererLink)
+				go handlers.DownloadJersey(jerseyLink, title, refererLink)
 
 				jersey := &models.Jersey{
 					Name: title,
 					Url:  refererLink,
 				}
 
-				jerseys = append(jerseys, jersey)
+				jerseys = append(jerseys, *jersey)
 
 			})
 
@@ -91,8 +91,7 @@ func main() {
 			Jerseys: jerseys,
 		}
 
-		albums = append(albums, album)
+		albums = append(albums, *album)
 
 	}
-
 }
