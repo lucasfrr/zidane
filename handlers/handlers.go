@@ -12,6 +12,31 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+func InputSearch() string {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	term := scanner.Text()
+
+	formattedTerm := FormatSearchTerm(term)
+
+	return formattedTerm
+}
+
+func MakeRequest(url string) *goquery.Document {
+	response, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+
+	document, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	return document
+}
+
 func GetPages(document *goquery.Document, url string) []string {
 	pages := 0
 	var pageLinks []string
@@ -30,47 +55,6 @@ func GetPages(document *goquery.Document, url string) []string {
 	}
 
 	return pageLinks
-}
-
-func FormatSearchTerm(term string) string {
-	var newTerm string
-
-	s := strings.ToLower(term)
-
-	for i := 0; i < len(s); i++ {
-		if string(s[i]) == " " {
-			newTerm += "+"
-		} else {
-			newTerm += string(s[i])
-		}
-	}
-
-	return newTerm
-}
-
-func MakeRequest(url string) *goquery.Document {
-	response, err := http.Get(url)
-	if err != nil {
-		panic(err)
-	}
-	defer response.Body.Close()
-
-	document, err := goquery.NewDocumentFromReader(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	return document
-}
-
-func InputSearch() string {
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	term := scanner.Text()
-
-	formattedTerm := FormatSearchTerm(term)
-
-	return formattedTerm
 }
 
 func DownloadJersey(link string, title string, refererLink string) {
@@ -105,4 +89,20 @@ func DownloadJersey(link string, title string, refererLink string) {
 	}
 
 	fmt.Printf("Baixado com sucesso\n")
+}
+
+func FormatSearchTerm(term string) string {
+	var newTerm string
+
+	s := strings.ToLower(term)
+
+	for i := 0; i < len(s); i++ {
+		if string(s[i]) == " " {
+			newTerm += "+"
+		} else {
+			newTerm += string(s[i])
+		}
+	}
+
+	return newTerm
 }
